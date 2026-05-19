@@ -14,14 +14,12 @@ export async function fetchActiveMarkets(
   const params = new URLSearchParams({
     active: "true",
     closed: "false",
-    limit: String(options.limit ?? 100),
+    limit: String(options.limit ?? 20),
     offset: String(options.offset ?? 0),
   });
 
   const response = await fetch(`${GAMMA_API_BASE_URL}/events?${params.toString()}`, {
-    next: {
-      revalidate: 60,
-    },
+    cache: "no-store",
   });
 
   if (!response.ok) {
