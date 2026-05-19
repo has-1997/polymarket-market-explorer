@@ -1,6 +1,6 @@
 import { Activity, RefreshCw } from "lucide-react";
 
-import { MarketCard } from "@/components/market-card";
+import { MarketExplorer } from "@/components/market-explorer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fetchActiveMarkets } from "@/lib/polymarket/client";
@@ -66,15 +66,7 @@ export default async function Home() {
               No active markets were found. Try refreshing later.
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {markets.map((market, index) => (
-                <MarketCard
-                  key={market.id}
-                  market={market}
-                  imagePriority={index < 3}
-                />
-              ))}
-            </div>
+            <MarketExplorer markets={markets} />
           )}
         </section>
       </main>
