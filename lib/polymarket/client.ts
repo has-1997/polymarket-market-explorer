@@ -30,3 +30,10 @@ export async function fetchActiveMarkets(
 
   return normalizeEventsToMarkets(events);
 }
+
+
+export async function fetchMarketBySlug(slug: string): Promise<MarketSummary | null> {
+  const markets = await fetchActiveMarkets({ limit: 20 });
+
+  return markets.find((market) => market.slug === slug) ?? null;
+}
