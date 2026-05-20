@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Droplets, TrendingUp } from "lucide-react";
+import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { WatchlistButton } from "@/components/watchlist-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { db } from "@/db";
+import { watchlistItems } from "@/db/schema";
 import { formatCurrency, formatDate, formatProbability } from "@/lib/formatters";
 import { fetchMarketBySlug } from "@/lib/polymarket/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type MarketDetailPageProps = {
   params: Promise<{
@@ -29,6 +34,26 @@ export default async function MarketDetailPage({ params }: MarketDetailPageProps
   if (!market) {
     notFound();
   }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const savedItems = user
+    ? await db
+        .select({ id: watchlistItems.id })
+        .from(watchlistItems)
+        .where(
+          and(
+            eq(watchlistItems.userId, user.id),
+            eq(watchlistItems.marketId, market.id),
+          ),
+        )
+        .limit(1)
+    : [];
+
+  const isSaved = savedItems.length > 0;
 
   return (
     <main className="min-h-screen bg-background">
@@ -61,12 +86,13 @@ export default async function MarketDetailPage({ params }: MarketDetailPageProps
             </div>
 
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">{market.category}</Badge>
                 <Badge variant={market.closed ? "destructive" : "default"}>
                   {market.closed ? "Closed" : "Open"}
                 </Badge>
                 {market.active && <Badge variant="outline">Active</Badge>}
+                <WatchlistButton market={market} initiallySaved={isSaved} />
               </div>
 
               <div className="space-y-3">
