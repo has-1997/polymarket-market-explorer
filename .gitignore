@@ -42,3 +42,8 @@ next-env.d.ts
 
 product/
 docs/
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
