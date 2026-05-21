@@ -4,6 +4,10 @@ A full-stack Next.js app for browsing live Polymarket prediction markets, search
 
 This project is read-only for market data. It does **not** connect wallets, place trades, or handle user funds.
 
+## Live Demo
+
+https://polymarket-market-explorer.vercel.app/
+
 ## Features
 
 - Browse active Polymarket markets
