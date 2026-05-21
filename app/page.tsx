@@ -1,6 +1,7 @@
 import { Activity } from "lucide-react";
 
 import { MarketExplorer } from "@/components/market-explorer";
+import { AutoRefreshToggle } from "@/components/auto-refresh-toggle";
 import { RefreshButton } from "@/components/refresh-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,10 @@ export default async function Home() {
                 </p>
               </div>
 
-              <RefreshButton />
+              <div className="flex flex-wrap gap-2">
+                <RefreshButton />
+                <AutoRefreshToggle />
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
