@@ -1,6 +1,7 @@
-import { Activity, RefreshCw } from "lucide-react";
+import { Activity } from "lucide-react";
 
 import { MarketExplorer } from "@/components/market-explorer";
+import { RefreshButton } from "@/components/refresh-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fetchActiveMarkets } from "@/lib/polymarket/client";
@@ -30,10 +31,7 @@ export default async function Home() {
                 </p>
               </div>
 
-              <Button variant="outline" disabled>
-                <RefreshCw className="h-4 w-4" />
-                Manual refresh coming soon
-              </Button>
+              <RefreshButton />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
