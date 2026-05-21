@@ -47,3 +47,5 @@ docs/
 .env
 .env.local
 .env.*.local
+# Keep placeholder env documentation tracked
+!.env.example
