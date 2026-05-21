@@ -86,3 +86,31 @@ export function normalizeEventsToMarkets(events: GammaEvent[]): MarketSummary[] 
       .map((market) => normalizeMarket(event, market)),
   );
 }
+
+export function normalizeSingleMarket(market: GammaMarket): MarketSummary {
+  const outcomes = parseJsonStringArray(market.outcomes);
+  const prices = parseJsonStringArray(market.outcomePrices);
+  const tokenIds = parseJsonStringArray(market.clobTokenIds);
+
+  return {
+    id: market.id,
+    slug: market.slug,
+    eventSlug: "",
+    question: market.question,
+    eventTitle: market.question,
+    description: market.description ?? "",
+    image: market.image ?? market.icon ?? "",
+    category: "Uncategorized",
+    tags: [],
+    outcomes: outcomes.map((name, index) => ({
+      name,
+      price: prices[index] === undefined ? null : toNumber(prices[index]),
+      tokenId: tokenIds[index] ?? null,
+    })),
+    volume: toNumber(market.volumeNum ?? market.volume),
+    liquidity: toNumber(market.liquidityNum ?? market.liquidity),
+    endDate: market.endDate ?? market.endDateIso ?? null,
+    active: market.active,
+    closed: market.closed,
+  };
+}

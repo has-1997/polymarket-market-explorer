@@ -39,3 +39,11 @@ export type GammaEvent = {
   markets?: GammaMarket[];
   tags?: GammaTag[];
 };
+
+export type GammaSearchResponse = {
+  events?: GammaEvent[] | null;
+  pagination?: {
+    hasMore?: boolean;
+    totalResults?: number;
+  } | null;
+};

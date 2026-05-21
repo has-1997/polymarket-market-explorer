@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { FormEvent, useMemo, useState } from "react";
+import { RefreshCw, Search } from "lucide-react";
 
 import { MarketCard } from "@/components/market-card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -18,40 +19,34 @@ type MarketExplorerProps = {
   markets: MarketSummary[];
 };
 
+type MarketsApiResponse = {
+  markets: MarketSummary[];
+  mode: "browse" | "search";
+  query: string;
+  fetchedAt: string;
+};
+
 type SortOption = "volume-desc" | "liquidity-desc" | "end-date-asc" | "category-asc";
 
 export function MarketExplorer({ markets }: MarketExplorerProps) {
+  const [displayMarkets, setDisplayMarkets] = useState(markets);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOption, setSortOption] = useState<SortOption>("volume-desc");
+  const [isSearching, setIsSearching] = useState(false);
 
   const categories = useMemo(() => {
     const uniqueCategories = new Set(
-      markets.map((market) => market.category).filter(Boolean),
+      displayMarkets.map((market) => market.category).filter(Boolean),
     );
 
     return Array.from(uniqueCategories).sort((a, b) => a.localeCompare(b));
-  }, [markets]);
+  }, [displayMarkets]);
 
   const filteredAndSortedMarkets = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    const filtered = markets.filter((market) => {
-      const matchesCategory =
-        selectedCategory === "all" || market.category === selectedCategory;
-
-      const searchableText = [
-        market.question,
-        market.eventTitle,
-        market.category,
-        ...market.tags,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      const matchesSearch = !query || searchableText.includes(query);
-
-      return matchesCategory && matchesSearch;
+    const filtered = displayMarkets.filter((market) => {
+      return selectedCategory === "all" || market.category === selectedCategory;
     });
 
     return [...filtered].sort((firstMarket, secondMarket) => {
@@ -77,21 +72,68 @@ export function MarketExplorer({ markets }: MarketExplorerProps) {
 
       return firstMarket.category.localeCompare(secondMarket.category);
     });
-  }, [markets, searchQuery, selectedCategory, sortOption]);
+  }, [displayMarkets, selectedCategory, sortOption]);
+
+  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const query = searchQuery.trim();
+    setIsSearching(true);
+    setSelectedCategory("all");
+
+    try {
+      const url = query
+        ? `/api/markets?q=${encodeURIComponent(query)}`
+        : "/api/markets";
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Market search failed");
+      }
+
+      const data = (await response.json()) as MarketsApiResponse;
+
+      setDisplayMarkets(data.markets);
+      setActiveSearchQuery(data.query);
+    } catch {
+      alert("Something went wrong while searching Polymarket.");
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  async function resetSearch() {
+    setSearchQuery("");
+    setActiveSearchQuery("");
+    setSelectedCategory("all");
+    setDisplayMarkets(markets);
+  }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px]">
+      <form onSubmit={handleSearch} className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search markets, events, or tags..."
+            placeholder="Search all Polymarket markets..."
             className="pl-9"
           />
         </div>
 
+        <Button type="submit" disabled={isSearching}>
+          {isSearching && <RefreshCw className="h-4 w-4 animate-spin" />}
+          {isSearching ? "Searching..." : "Search Polymarket"}
+        </Button>
+
+        <Button type="button" variant="outline" onClick={resetSearch}>
+          Reset
+        </Button>
+      </form>
+
+      <div className="grid gap-3 md:grid-cols-2">
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Filter by category" />
@@ -123,12 +165,13 @@ export function MarketExplorer({ markets }: MarketExplorerProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Showing {filteredAndSortedMarkets.length} of {markets.length} markets
+        Showing {filteredAndSortedMarkets.length} of {displayMarkets.length} markets
+        {activeSearchQuery ? ` for “${activeSearchQuery}”` : " from the default browse feed"}
       </p>
 
       {filteredAndSortedMarkets.length === 0 ? (
         <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-          No markets matched your filters. Try a different keyword or category.
+          No markets matched your search or filters. Try a different keyword or category.
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
